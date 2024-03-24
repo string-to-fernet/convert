@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Derive and Format Fernet Key from String</title>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f8f8f8; /* Off-white background */
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.input-container {
+    text-align: center;
+    flex-grow: 1;
+    margin-right: 10px;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+}
+
+.input-container input {
+    text-align: center;
+    width: 70%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    background-color: white;
+}
+
+.button-container {
+    margin: 0 10px;
+    display: flex;
+    align-items: center;
+}
+
+.arrow-button {
+    padding: 10px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.arrow-button:hover {
+    background-color: #45a049;
+}
+
+.output-container {
+    flex-grow: 1;
+    margin-left: 10px;
+    text-align: center;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f5f5f5;
+    position: relative;
+   
+}
+
+.howto-container {
+    flex-grow: 1;
+    text-align: left;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f5f5f5;
+}
+
+.copy-button {
+    padding: 5px 10px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}
+
+.copy-button:hover {
+    background-color: #45a049;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="input-container">
+        <h3 style="text-align: center;">Input String</h3>
+        <input type="text" id="input" placeholder="Enter string for key derivation">
+    </div>
+
+    <div class="button-container">
+        <button class="arrow-button" onclick="deriveAndFormatKey()">➔</button>
+    </div>
+
+    <div class="output-container">
+        <h3 style="text-align: center;">Generated Fernet Key</h3>
+        <textarea  id="output" readonly></textarea>
+        <button class="copy-button" onclick="copyToClipboard()">Copy</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="howto-container">
+        <h3>How to Use the Fernet Key in Python</h3>
+        <p>To use the generated Fernet key in Python, you can install the <code>cryptography</code> library:</p>
+        <pre><code>pip install cryptography</code></pre>
+        <p>Then, you can use the key as follows:</p>
+        <pre><code>from cryptography.fernet import Fernet
+
+# Replace 'your_generated_key_here' with the generated Fernet key
+key = b'your_generated_key_here'
+cipher = Fernet(key)
+
+# Example usage: encrypting and decrypting a message
+message = b'Hello, world!'
+encrypted_message = cipher.encrypt(message)
+decrypted_message = cipher.decrypt(encrypted_message)
+
+print("Original message:", message)
+print("Encrypted message:", encrypted_message)
+print("Decrypted message:", decrypted_message)</code></pre>
+    </div>
+</div>
+
+<script>
+// Function to convert a byte array to a hex string
+function byteArrayToHexString(byteArray) {
+    return Array.from(byteArray)
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+// Function to derive and format a Fernet key from a string input
+async function deriveAndFormatKey() {
+    const input = document.getElementById("input").value;
+
+    // Convert the input string to an array buffer
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+
+    // Derive a 256-bit (32-byte) key using SHA-256 hash function
+    const keyBuffer = await crypto.subtle.digest('SHA-256', data);
+
+    // Convert the key buffer to a Uint8Array
+    const keyArray = new Uint8Array(keyBuffer);
+
+    // Convert the key array to a base64 string
+    const keyBase64 = btoa(String.fromCharCode.apply(null, keyArray));
+
+    // Encode the base64 string to make it URL-safe
+    const keyUrlSafe = keyBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    // Ensure key is 32 bytes long and encoded properly
+    const formattedKey = keyUrlSafe.padEnd(44, '=');
+
+    // Display the formatted key in the output textarea
+    document.getElementById("output").value = formattedKey;
+}
+
+// Function to copy the generated key to clipboard
+function copyToClipboard() {
+    const outputTextarea = document.getElementById("output");
+    outputTextarea.select();
+    document.execCommand("copy");
+}
+</script>
+
+</body>
+</html>
